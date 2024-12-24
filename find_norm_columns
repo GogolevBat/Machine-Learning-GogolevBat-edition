@@ -1,0 +1,44 @@
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler, normalize
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# Класический перебор 
+# Убирает не нужные колонки и проверяет улучшилось ли время, если есть улучшения убирает колонку окончательно и проверяет заново
+# Для удобства можно сделать из неё функцию
+
+column_del = ""
+max_f1_model = 0
+df_for_best_score = df.copy() # Впишите ваш DataDrame
+while True:
+    max_f1 = 0
+    column_del = ""
+    for column in df_train_ses_with_new_colums.columns:
+        if column == 'target':
+            continue
+        print(column)
+        
+        df_without_column = df_for_best_score.loc[:, df_for_best_score.columns != column]
+        X = df_without_column.drop(columns='target')
+        y = df_without_column.target
+        
+        scaler = StandardScaler()
+        scaled_features = scaler.fit_transform(X)
+        normalize_f = normalize(scaled_features) 
+        X = pd.DataFrame(normalize_f, index=X.index, columns=X.columns)
+        
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.1, random_state=42)
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=8)  
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        print(f1_score(y_test, y_pred))
+        if max_f1 < f1_score(y_test, y_pred):
+            max_f1 = f1_score(y_test, y_pred)
+            column_del = column
+            
+    if max_f1 <= max_f1_model:
+        break
+    max_f1_model = max_f1
+    df_for_best_score = df_for_best_score.loc[:, df_for_best_score.columns != column_del]
